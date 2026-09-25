@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Un fetch</title>
+        <style>
+            body { font-family: Helvetica, Arial, sans-serif; }
+            .columnas { display: flex; justify-content: space-between; gap: 40px; }
+            .derecha { text-align: right; }
+        </style>
+    </head>
+    <body>
+        <h1>Hola mundo</h1>
+
+        <!-- Este <ol> (lista ordenada) empieza vacío. Lo vamos a llenar con JavaScript una vez tengamos la respueta al fetch -->
+        <!--<ol id="ituciones"></ol-->
+
+        <div class="columnas">
+            <div>
+                <h2>prestigio academico</h2>
+                <ol id="academic"></ol>
+            </div>
+
+            <div class="derecha">
+                <h2>prestigio laboral</h2>
+                <ol id="employ"></ol>
+            </div>
+        </div>
+
+        <script>
+            // 1) Guardamos una referencia al elemento <ol> del DOM.
+            const uno = document.querySelector("#employ");
+
+            const otro = document.querySelector("#academic");
+
+            // 2) La URL del "endpoint": el lugar de internet donde están los datos. En este caso, es una API que devuelve JSON.
+            const URL = "https://api.myjson.online/v1/records/f5e8f691-c6c4-4713-9ef3-d1bcafae3b46";
+
+            // 3) fetch() hace una petición HTTP a esa URL.
+
+            fetch(URL)
+                // 4) Primer .then(): se ejecuta cuando el servidor responde
+                .then((respuesta) => {
+                    // 5) respuesta.ok es true solo si el código de estado HTTP
+                    if (!respuesta.ok) {
+                        throw new Error("Error HTTP: " + respuesta.status);
+                    }
+
+                    // 6) respuesta.json() lee el cuerpo de la respuesta y lo convierte
+                    return respuesta.json();
+                })
+
+                // 7) Segundo .then(): se ejecuta cuando ya tenemos los datos
+                .then((datos) => {
+                    // 8) Según cómo esté armada esta API, los registros vienen
+                    var qs = datos.data;
+
+                    // 9) console.log() no muestra nada en la página: aparece en la
+                    console.log("Datos recibidos:", qs);
+
+                  
+                    const ordenEmployer = [...qs].sort((a, b) => b.employer_reputation - a.employer_reputation);
+                    const ordenAcademic = [...qs].sort((a, b) => b.academic_reputation - a.academic_reputation);
+
+                    // 10) recorremos cada arreglo ordenado y filtramos por el umbral (top 25 de cada uno)
+                    ordenAcademic.forEach((x) => {
+                        if (x.academic_reputation > 72) {
+                            otro.innerHTML += `<li>${x.name} - ${x.location}</li>`;
+                        }
+                    });
+
+                    ordenEmployer.forEach((x) => {
+                        if (x.employer_reputation > 75.5) {
+                            uno.innerHTML += `<li>${x.name} - ${x.location}</li>`;
+                        }
+                    });
+                })
+
+                // 11) .catch(): atrapa CUALQUIER error que haya ocurrido en la cadena de arriba (fallo de red, respuesta.ok falso, JSON mal formado, etc.).
+                .catch((error) => {
+                    console.error("Algo salió mal:", error);
+                });
+
+            // RESUMEN del flujo:
+            // fetch(URL)              -> pide los datos al servidor
+            //   .then(respuesta)      -> llega la respuesta (aún no son los datos finales)
+            //   .then(datos)          -> ya tenemos los datos listos para usar
+            //   .catch(error)         -> si algo falló en cualquier paso anterior, cae aquí
+        </script>
+    </body>
+
+</html>
